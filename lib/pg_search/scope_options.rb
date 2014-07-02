@@ -13,10 +13,10 @@ module PgSearch
     end
 
     def apply(scope)
-      scope.
+      scope = scope.
         select("#{quoted_table_name}.*, (#{rank}) AS pg_search_rank").
-        where(conditions).
-        order("pg_search_rank DESC, #{order_within_rank}").
+        where(conditions)
+      order_with_rank(scope).
         joins(joins).
         extend(DisableEagerLoading)
     end
@@ -38,6 +38,11 @@ module PgSearch
       end.inject do |accumulator, expression|
         Arel::Nodes::Or.new(accumulator, expression)
       end.to_sql
+    end
+
+    def order_with_rank(scope)
+      scope = scope.order("pg_search_rank DESC, #{order_within_rank}") if config.order
+      scope
     end
 
     def order_within_rank
